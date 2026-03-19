@@ -238,7 +238,7 @@ export default function Dashboard() {
       const gasto = regs.reduce((a, c) => a + parse(c[cols.gasto]), 0);
       const leads = regs.reduce((a, c) => a + parse(c[cols.leads]), 0);
       return { nome, gasto, leads, cpl: leads > 0 ? gasto / leads : 0 };
-    }).sort((a, b) => b.cpl - a.gasto);
+    }).sort((a, b) => b.cpl - a.cpl);
   }, [dadosFiltrados, cols]);
 
   const dadosPorDia = useMemo(() => {
