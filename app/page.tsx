@@ -31,9 +31,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-// ─── META DE CPL — altere aqui para disparar o alerta S.O.S ──────────────────
-const META_CPL = 100;
-// ─────────────────────────────────────────────────────────────────────────────
+const META_CPL = 100; // ← altere para sua meta de CPL
 
 function ClienteSidebar({
   clientes,
@@ -46,9 +44,9 @@ function ClienteSidebar({
   clienteSelecionado: string | null;
   onSelect: (nome: string) => void;
 }) {
-  const [showAll, setShowAll] = useState(false);
   const label = plataforma === 'google_ads' ? 'Google Ads' : 'Meta Ads';
 
+  // S.O.S primeiro, depois por CPL decrescente
   const sorted = useMemo(() => [...clientes].sort((a, b) => {
     const aSos = a.leads > 0 && a.cpl > META_CPL;
     const bSos = b.leads > 0 && b.cpl > META_CPL;
@@ -58,7 +56,6 @@ function ClienteSidebar({
   }), [clientes]);
 
   const sosCount = sorted.filter(c => c.leads > 0 && c.cpl > META_CPL).length;
-  const visible = showAll ? sorted : sorted.slice(0, 8);
 
   return (
     <aside style={{
@@ -117,14 +114,14 @@ function ClienteSidebar({
         </div>
       </div>
 
-      {/* List */}
+      {/* Lista completa — sem limite, sem botão "ver todos" */}
       <div style={{
         overflowY: 'auto', flex: 1,
         padding: '10px 14px',
         display: 'flex', flexDirection: 'column', gap: '8px',
         scrollbarWidth: 'thin', scrollbarColor: '#7c3aed transparent',
       }}>
-        {visible.map((c, i) => {
+        {sorted.map((c, i) => {
           const isSos = c.leads > 0 && c.cpl > META_CPL;
           const ativo = clienteSelecionado === c.nome;
 
@@ -144,7 +141,6 @@ function ClienteSidebar({
                 cursor: 'pointer', transition: 'border-color .15s, background .15s',
               }}
             >
-              {/* Nome */}
               <div style={{
                 fontSize: '10.5px', fontWeight: 700,
                 letterSpacing: '0.06em', textTransform: 'uppercase',
@@ -168,7 +164,6 @@ function ClienteSidebar({
                 )}
               </div>
 
-              {/* Métricas */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px' }}>
                   <span style={{ color: 'rgba(255,255,255,0.4)' }}>{c.leads} Conv.</span>
@@ -188,26 +183,6 @@ function ClienteSidebar({
         })}
       </div>
 
-      {/* Footer */}
-      {sorted.length > 8 && (
-        <div style={{
-          padding: '10px 14px 14px', borderTop: '1px solid rgba(120,80,255,0.18)',
-          display: 'flex', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <button
-            onClick={() => setShowAll(v => !v)}
-            style={{
-              background: 'none', border: '1px solid rgba(120,80,255,0.28)',
-              borderRadius: '8px', color: '#c084fc',
-              fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em',
-              padding: '6px 18px', cursor: 'pointer', textTransform: 'uppercase',
-            }}
-          >
-            {showAll ? 'Ver menos' : `Ver todos (${sorted.length})`}
-          </button>
-        </div>
-      )}
-
       <style>{`
         @keyframes sosPulse { 0%,100%{opacity:1} 50%{opacity:.25} }
       `}</style>
@@ -215,7 +190,6 @@ function ClienteSidebar({
   );
 }
 
-// ─── DASHBOARD ────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [data, setData] = useState<AdsData[]>([]);
   const [plataforma, setPlataforma] = useState<'meta_ads' | 'google_ads'>('meta_ads');
@@ -335,13 +309,61 @@ export default function Dashboard() {
   if (!isMounted) return null;
 
   return (
-    <main className="min-h-screen p-6 md:p-12 bg-[#0a051a] text-purple-50 font-sans">
-      <div className="max-w-[1800px] mx-auto">
+    /*
+      IMPORTANTE: para o background com logo aparecer, adicione no seu
+      globals.css ou layout.tsx:
+
+        body {
+          background-color: #0a051a;
+          background-image: url('/logo-empresa.png');
+          background-repeat: no-repeat;
+          background-position: center center;
+          background-size: 40%;
+          background-attachment: fixed;
+          opacity-blend: ...  (use o wrapper abaixo para opacidade)
+        }
+
+      OU use o wrapper com pseudo-elemento abaixo (recomendado):
+    */
+    <main
+      className="min-h-screen p-6 md:p-12 text-purple-50 font-sans"
+      style={{
+        backgroundColor: '#0a051a',
+        position: 'relative',
+      }}
+    >
+      {/* Background logo watermark */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundImage: "url('/logo-empresa.png')",
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center center',
+          backgroundSize: '35%',
+          opacity: 0.04,
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+
+      <div className="max-w-[1800px] mx-auto" style={{ position: 'relative', zIndex: 1 }}>
 
         {/* HEADER */}
         <header className="flex flex-col gap-8 mb-12 border-b border-purple-900/40 pb-10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <Image src="/logo-empresa.png" alt="Logo" width={200} height={50} className="h-12 w-auto" />
+
+            {/* LOGO — aumentada */}
+            <Image
+              src="/logo-empresa.png"
+              alt="Logo"
+              width={220}
+              height={64}
+              className="w-auto"
+              style={{ height: '64px' }}
+              priority
+            />
 
             <div className="flex bg-purple-900/40 p-1 rounded-xl border border-purple-700/50">
               <button onClick={() => setPlataforma('meta_ads')}
