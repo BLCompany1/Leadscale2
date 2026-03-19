@@ -392,7 +392,7 @@ export default function Dashboard() {
                   stroke="#fff" fontSize={10} angle={-45} textAnchor="end"
                   tickFormatter={(v) => {
                     if (!clienteSelecionado) return v;
-                    const d = new Date(v);
+                    const d = new Date(`${v}T00:00:00`);
                     return `${d.getDate()}/${d.getMonth() + 1}`;
                   }}
                 />
