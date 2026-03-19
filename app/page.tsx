@@ -30,15 +30,9 @@ const CustomTooltip = ({ active, payload }: any) => {
         padding: '12px 16px'
       }}>
         <p style={{ color: '#ffffff', fontWeight: 'bold', marginBottom: '8px', fontSize: '12px' }}>{data.nome}</p>
-        <p style={{ color: '#ffffff', fontSize: '11px' }}>
-          Leads: <b>{data.leads}</b>
-        </p>
-        <p style={{ color: '#ffffff', fontSize: '11px' }}>
-          CPL: <b>R$ {data.cpl.toFixed(2)}</b>
-        </p>
-        <p style={{ color: '#ffffff', fontSize: '11px' }}>
-          Gasto: <b>R$ {data.gasto.toFixed(2)}</b>
-        </p>
+        <p style={{ color: '#ffffff', fontSize: '11px' }}>Leads: <b>{data.leads}</b></p>
+        <p style={{ color: '#ffffff', fontSize: '11px' }}>CPL: <b>R$ {data.cpl.toFixed(2)}</b></p>
+        <p style={{ color: '#ffffff', fontSize: '11px' }}>Investimento: <b>R$ {data.gasto.toFixed(2)}</b></p>
       </div>
     );
   }
@@ -181,59 +175,58 @@ export default function Dashboard() {
   if (!isMounted) return null;
 
   return (
-    <main className="min-h-screen p-6 md:p-12 bg-[#0a051a] text-purple-50">
+    <main className="min-h-screen p-6 md:p-12 bg-[#0a051a] text-purple-50 relative overflow-hidden font-sans">
+
       <div className="max-w-[1800px] mx-auto">
 
         {/* HEADER */}
-        <header className="flex flex-col gap-6 mb-10">
-          <div className="flex justify-between items-center">
-            <Image src="/logo-empresa.png" alt="Logo" width={200} height={50} />
+        <header className="flex flex-col gap-8 mb-12 border-b border-purple-900/40 pb-10">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <Image src="/logo-empresa.png" alt="Logo" width={200} height={50} className="h-12 w-auto" />
 
-            <div className="flex gap-2">
-              <button onClick={() => setPlataforma('meta_ads')} className="bg-blue-600 px-4 py-2 rounded">Meta</button>
-              <button onClick={() => setPlataforma('google_ads')} className="bg-yellow-500 px-4 py-2 rounded text-black">Google</button>
+            <div className="flex bg-purple-900/40 p-1 rounded-xl border border-purple-700/50">
+              <button onClick={() => setPlataforma('meta_ads')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase ${plataforma === 'meta_ads' ? 'bg-blue-600 text-white' : 'text-purple-400'}`}>Meta Ads</button>
+              <button onClick={() => setPlataforma('google_ads')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase ${plataforma === 'google_ads' ? 'bg-yellow-500 text-black' : 'text-purple-400'}`}>Google Ads</button>
             </div>
 
-            <select value={gestorAtivo} onChange={(e) => setGestorAtivo(e.target.value)}>
+            <select value={gestorAtivo} onChange={(e) => setGestorAtivo(e.target.value)} className="bg-purple-900/40 text-white px-4 py-2 rounded-full">
               <option value="Todos">Todos</option>
               {opcoesGestores.map(g => <option key={g}>{g}</option>)}
             </select>
           </div>
-
-          {loading && <span className="text-purple-400 text-xs">Carregando...</span>}
         </header>
 
         {/* CARDS */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-purple-900/20 p-4 rounded">
-            <p>Investimento</p>
-            <h2>R$ {totalGasto.toFixed(2)}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <div className="bg-purple-900/10 p-6 rounded-[2rem] text-center">
+            <p className="text-purple-400 text-xs">Investimento</p>
+            <p className="text-2xl font-bold">R$ {totalGasto.toFixed(2)}</p>
           </div>
 
-          <div className="bg-purple-900/20 p-4 rounded">
-            <p>Leads</p>
-            <h2>{totalLeads}</h2>
+          <div className="bg-purple-900/10 p-6 rounded-[2rem] text-center">
+            <p className="text-purple-400 text-xs">Leads</p>
+            <p className="text-2xl font-bold">{totalLeads}</p>
           </div>
 
-          <div className="bg-purple-900/20 p-4 rounded">
-            <p>CPL Médio</p>
-            <h2>R$ {(totalGasto / (totalLeads || 1)).toFixed(2)}</h2>
+          <div className="bg-purple-900/10 p-6 rounded-[2rem] text-center">
+            <p className="text-purple-400 text-xs">CPL Médio</p>
+            <p className="text-2xl font-bold">R$ {(totalGasto / (totalLeads || 1)).toFixed(2)}</p>
           </div>
         </div>
 
         {/* GRÁFICO */}
-        <div className="bg-purple-900/10 p-6 rounded h-[500px]">
+        <div className="bg-purple-900/5 p-8 rounded-[3rem] border border-purple-500/10 h-[500px]">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={todosClientes}>
               <CartesianGrid stroke="#1f1433" />
-              <XAxis dataKey="nome" />
-              <YAxis yAxisId="left" />
+              <XAxis dataKey="nome" stroke="#fff" fontSize={10} angle={-45} textAnchor="end" />
+              <YAxis yAxisId="left" hide />
               <YAxis yAxisId="right" orientation="right" stroke="#10b981" />
               <Tooltip content={<CustomTooltip />} />
 
               <Bar yAxisId="left" dataKey="leads" fill="#8b5cf6" />
               <Bar yAxisId="left" dataKey="cpl" fill="#4b2a85" />
-              <Line yAxisId="right" dataKey="gasto" stroke="#10b981" strokeWidth={2} />
+              <Line yAxisId="right" dataKey="gasto" stroke="#10b981" strokeWidth={3} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
