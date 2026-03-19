@@ -175,102 +175,24 @@ export default function Dashboard() {
   if (!isMounted) return null;
 
   return (
-    <main className="min-h-screen p-6 md:p-12 bg-[#0a051a] text-purple-50 relative overflow-hidden font-sans">
+    <main className="min-h-screen p-6 md:p-12 bg-[#0a051a] text-purple-50 font-sans">
 
       <div className="max-w-[1800px] mx-auto">
 
         {/* HEADER */}
-       <header className="flex flex-col gap-8 mb-12 border-b border-purple-900/40 pb-10">
+        <header className="flex flex-col gap-8 mb-12 border-b border-purple-900/40 pb-10">
 
-  {/* LINHA PRINCIPAL */}
-  <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-    <Image src="/logo-empresa.png" alt="Logo" width={200} height={50} className="h-12 w-auto" />
-
-    <div className="flex bg-purple-900/40 p-1 rounded-xl border border-purple-700/50">
-      <button onClick={() => setPlataforma('meta_ads')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase ${plataforma === 'meta_ads' ? 'bg-blue-600 text-white' : 'text-purple-400'}`}>
-        Meta Ads
-      </button>
-      <button onClick={() => setPlataforma('google_ads')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase ${plataforma === 'google_ads' ? 'bg-yellow-500 text-black' : 'text-purple-400'}`}>
-        Google Ads
-      </button>
-    </div>
-
-    <select value={gestorAtivo} onChange={(e) => setGestorAtivo(e.target.value)} className="bg-purple-900/40 text-white px-4 py-2 rounded-full">
-      <option value="Todos">Todos</option>
-      {opcoesGestores.map(g => <option key={g}>{g}</option>)}
-    </select>
-  </div>
-
-  {/* FILTRO DE DATA */}
-  <div className="flex flex-wrap items-center justify-between gap-6">
-
-    <div className="flex gap-6 items-center">
-
-      <div className="flex bg-purple-900/30 p-1 rounded-full border border-purple-700/50">
-        {['1', '7', '14'].map((d) => (
-          <button
-            key={d}
-            onClick={() => {
-              setPeriodoRapido(d);
-              setDataInicio('');
-              setDataFim('');
-            }}
-            className={`px-6 py-2 rounded-full text-[10px] font-black uppercase ${
-              periodoRapido === d && !dataInicio && !dataFim
-                ? 'bg-purple-600 text-white shadow-lg'
-                : 'text-purple-400'
-            }`}
-          >
-            {d}D
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-4 bg-purple-900/20 px-6 py-2 rounded-full border border-purple-700/30">
-        <input
-          type="date"
-          value={dataInicio}
-          onChange={(e) => {
-            setDataInicio(e.target.value);
-            setPeriodoRapido('');
-          }}
-          className="bg-transparent text-white text-[10px] font-bold outline-none"
-        />
-
-        <div className="h-4 w-[1px] bg-purple-700/30"></div>
-
-        <input
-          type="date"
-          value={dataFim}
-          onChange={(e) => {
-            setDataFim(e.target.value);
-            setPeriodoRapido('');
-          }}
-          className="bg-transparent text-white text-[10px] font-bold outline-none"
-        />
-      </div>
-
-    </div>
-
-    {loading && (
-      <span className="text-purple-400 text-[10px] animate-pulse font-black">
-        SINCRONIZANDO SUPABASE...
-      </span>
-    )}
-  </div>
-
-  {loading && (
-    <span className="text-purple-400 text-[10px] animate-pulse font-black">
-      SINCRONIZANDO SUPABASE...
-    </span>
-  )}
-</div>
+          {/* LINHA PRINCIPAL */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <Image src="/logo-empresa.png" alt="Logo" width={200} height={50} className="h-12 w-auto" />
 
             <div className="flex bg-purple-900/40 p-1 rounded-xl border border-purple-700/50">
-              <button onClick={() => setPlataforma('meta_ads')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase ${plataforma === 'meta_ads' ? 'bg-blue-600 text-white' : 'text-purple-400'}`}>Meta Ads</button>
-              <button onClick={() => setPlataforma('google_ads')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase ${plataforma === 'google_ads' ? 'bg-yellow-500 text-black' : 'text-purple-400'}`}>Google Ads</button>
+              <button onClick={() => setPlataforma('meta_ads')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase ${plataforma === 'meta_ads' ? 'bg-blue-600 text-white' : 'text-purple-400'}`}>
+                Meta Ads
+              </button>
+              <button onClick={() => setPlataforma('google_ads')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase ${plataforma === 'google_ads' ? 'bg-yellow-500 text-black' : 'text-purple-400'}`}>
+                Google Ads
+              </button>
             </div>
 
             <select value={gestorAtivo} onChange={(e) => setGestorAtivo(e.target.value)} className="bg-purple-900/40 text-white px-4 py-2 rounded-full">
@@ -278,6 +200,43 @@ export default function Dashboard() {
               {opcoesGestores.map(g => <option key={g}>{g}</option>)}
             </select>
           </div>
+
+          {/* FILTRO DE DATA */}
+          <div className="flex flex-wrap items-center justify-between gap-6">
+
+            <div className="flex gap-6 items-center">
+
+              <div className="flex bg-purple-900/30 p-1 rounded-full border border-purple-700/50">
+                {['1', '7', '14'].map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => {
+                      setPeriodoRapido(d);
+                      setDataInicio('');
+                      setDataFim('');
+                    }}
+                    className={`px-6 py-2 rounded-full text-[10px] font-black uppercase ${
+                      periodoRapido === d && !dataInicio && !dataFim
+                        ? 'bg-purple-600 text-white shadow-lg'
+                        : 'text-purple-400'
+                    }`}
+                  >
+                    {d}D
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-4 bg-purple-900/20 px-6 py-2 rounded-full border border-purple-700/30">
+                <input type="date" value={dataInicio} onChange={(e) => { setDataInicio(e.target.value); setPeriodoRapido(''); }} className="bg-transparent text-white text-[10px]" />
+                <div className="h-4 w-[1px] bg-purple-700/30"></div>
+                <input type="date" value={dataFim} onChange={(e) => { setDataFim(e.target.value); setPeriodoRapido(''); }} className="bg-transparent text-white text-[10px]" />
+              </div>
+
+            </div>
+
+            {loading && <span className="text-purple-400 text-[10px] animate-pulse">SINCRONIZANDO...</span>}
+          </div>
+
         </header>
 
         {/* CARDS */}
