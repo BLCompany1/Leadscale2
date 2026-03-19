@@ -218,7 +218,7 @@ export default function Dashboard() {
       } else {
         const dias = parseInt(periodoRapido);
         const hoje = new Date(); hoje.setHours(0,0,0,0);
-        const fim = new Date(hoje); fim.setDate(hoje.getDate() - 1);
+        const fim = new Date(hoje);
         const inicio = new Date(hoje); inicio.setDate(hoje.getDate() - dias);
         atendeData = itemDate >= fmt(inicio) && itemDate <= fmt(fim);
       }
