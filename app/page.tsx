@@ -2,20 +2,12 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import {
-  ComposedChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid
+  ComposedChart, Bar, Line, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, CartesianGrid
 } from 'recharts';
 import Image from 'next/image';
 
-interface AdsData {
-  [key: string]: any;
-}
+interface AdsData { [key: string]: any; }
 
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
@@ -48,6 +40,7 @@ export default function Dashboard() {
   const [dataFim, setDataFim] = useState('');
   const [clienteSelecionado, setClienteSelecionado] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const cols = useMemo(() => {
     if (plataforma === 'google_ads') {
@@ -72,6 +65,7 @@ export default function Dashboard() {
     setIsMounted(true);
 
     async function fetchData() {
+      setLoading(true);
       let allData: AdsData[] = [];
       let page = 0;
       const pageSize = 1000;
@@ -97,10 +91,16 @@ export default function Dashboard() {
       }
 
       setData(allData);
+      setLoading(false);
     }
 
     fetchData();
   }, [plataforma, cols]);
+
+  const opcoesGestores = useMemo(() => {
+    const gestores = data.map(i => i[cols.gestor]?.trim()).filter(Boolean);
+    return [...new Set(gestores)].sort();
+  }, [data, cols]);
 
   const dadosFiltrados = useMemo(() => {
     const formatDate = (d: Date) =>
@@ -112,10 +112,10 @@ export default function Dashboard() {
 
       const itemDate = dateVal.substring(0, 10);
 
-      let ok = false;
+      let atendeData = false;
 
       if (dataInicio || dataFim) {
-        ok =
+        atendeData =
           (!dataInicio || itemDate >= dataInicio) &&
           (!dataFim || itemDate <= dataFim);
       } else {
@@ -129,12 +129,12 @@ export default function Dashboard() {
         const inicio = new Date(hoje);
         inicio.setDate(hoje.getDate() - dias);
 
-        ok =
+        atendeData =
           itemDate >= formatDate(inicio) &&
           itemDate <= formatDate(fim);
       }
 
-      return (gestorAtivo === 'Todos' || item[cols.gestor]?.trim() === gestorAtivo) && ok;
+      return (gestorAtivo === 'Todos' || item[cols.gestor]?.trim() === gestorAtivo) && atendeData;
     });
   }, [data, gestorAtivo, dataInicio, dataFim, periodoRapido, cols]);
 
@@ -155,7 +155,6 @@ export default function Dashboard() {
     }).sort((a, b) => b.gasto - a.gasto);
   }, [dadosFiltrados, cols]);
 
-  // 🔥 TIMELINE POR DIA
   const dadosPorDia = useMemo(() => {
     if (!clienteSelecionado) return [];
 
@@ -190,39 +189,104 @@ export default function Dashboard() {
 
   const dadosGrafico = clienteSelecionado ? dadosPorDia : todosClientes;
 
+  const totalGasto = dadosGrafico.reduce((a, c) => a + c.gasto, 0);
+  const totalLeads = dadosGrafico.reduce((a, c) => a + c.leads, 0);
+
   if (!isMounted) return null;
 
   return (
-    <main className="min-h-screen p-6 bg-[#0a051a] text-white">
+    <main className="min-h-screen p-6 md:p-12 bg-[#0a051a] text-purple-50 font-sans">
 
       <div className="max-w-[1800px] mx-auto">
 
-        <header className="mb-6">
-          <Image src="/logo-empresa.png" alt="Logo" width={200} height={50} />
-          {clienteSelecionado && (
-            <button
-              onClick={() => setClienteSelecionado(null)}
-              className="text-xs underline mt-2"
-            >
-              Limpar ({clienteSelecionado})
-            </button>
-          )}
+        {/* HEADER COMPLETO RESTAURADO */}
+        <header className="flex flex-col gap-8 mb-12 border-b border-purple-900/40 pb-10">
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <Image src="/logo-empresa.png" alt="Logo" width={200} height={50} className="h-12 w-auto" />
+
+            <div className="flex bg-purple-900/40 p-1 rounded-xl border border-purple-700/50">
+              <button onClick={() => setPlataforma('meta_ads')} className={`px-6 py-2 rounded-lg text-[10px] font-black ${plataforma === 'meta_ads' ? 'bg-blue-600 text-white' : 'text-purple-400'}`}>
+                Meta Ads
+              </button>
+              <button onClick={() => setPlataforma('google_ads')} className={`px-6 py-2 rounded-lg text-[10px] font-black ${plataforma === 'google_ads' ? 'bg-yellow-500 text-black' : 'text-purple-400'}`}>
+                Google Ads
+              </button>
+            </div>
+
+            <select value={gestorAtivo} onChange={(e) => setGestorAtivo(e.target.value)} className="bg-purple-900/40 px-4 py-2 rounded-full">
+              <option value="Todos">Todos</option>
+              {opcoesGestores.map(g => <option key={g}>{g}</option>)}
+            </select>
+          </div>
+
+          {/* FILTRO DATA */}
+          <div className="flex justify-between items-center">
+            <div className="flex gap-4">
+              {['1','7','14'].map(d => (
+                <button key={d} onClick={() => {
+                  setPeriodoRapido(d);
+                  setDataInicio('');
+                  setDataFim('');
+                }}
+                className={`px-4 py-2 rounded-full text-xs ${periodoRapido === d ? 'bg-purple-600' : 'text-purple-400'}`}>
+                  {d}D
+                </button>
+              ))}
+
+              <input type="date" value={dataInicio} onChange={e => {
+                setDataInicio(e.target.value);
+                setPeriodoRapido('');
+              }} />
+
+              <input type="date" value={dataFim} onChange={e => {
+                setDataFim(e.target.value);
+                setPeriodoRapido('');
+              }} />
+            </div>
+
+            {clienteSelecionado && (
+              <button onClick={() => setClienteSelecionado(null)} className="text-xs underline">
+                Limpar ({clienteSelecionado})
+              </button>
+            )}
+          </div>
+
         </header>
 
+        {/* CARDS */}
+        <div className="grid grid-cols-3 gap-6 mb-10">
+          <div className="bg-purple-900/10 p-6 rounded-2xl text-center">
+            <p>Investimento</p>
+            <p className="text-2xl font-bold">R$ {totalGasto.toFixed(2)}</p>
+          </div>
+
+          <div className="bg-purple-900/10 p-6 rounded-2xl text-center">
+            <p>Leads</p>
+            <p className="text-2xl font-bold">{totalLeads}</p>
+          </div>
+
+          <div className="bg-purple-900/10 p-6 rounded-2xl text-center">
+            <p>CPL</p>
+            <p className="text-2xl font-bold">R$ {(totalGasto/(totalLeads||1)).toFixed(2)}</p>
+          </div>
+        </div>
+
+        {/* GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-8">
 
           {/* GRÁFICO */}
-          <div className="h-[500px]">
+          <div className="bg-purple-900/5 p-8 rounded-3xl h-[500px]">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={dadosGrafico}>
                 <CartesianGrid stroke="#1f1433" />
 
                 <XAxis
                   dataKey={clienteSelecionado ? "data" : "nome"}
-                  tickFormatter={(value) => {
-                    if (!clienteSelecionado) return value;
-                    const d = new Date(value);
-                    return `${d.getDate()}/${d.getMonth() + 1}`;
+                  tickFormatter={(v) => {
+                    if (!clienteSelecionado) return v;
+                    const d = new Date(v);
+                    return `${d.getDate()}/${d.getMonth()+1}`;
                   }}
                 />
 
@@ -233,23 +297,20 @@ export default function Dashboard() {
 
                 <Bar yAxisId="left" dataKey="leads" fill="#8b5cf6" />
                 <Bar yAxisId="left" dataKey="cpl" fill="#4b2a85" />
-                <Line yAxisId="right" dataKey="gasto" stroke="#10b981" strokeWidth={3} />
+                <Line yAxisId="right" dataKey="gasto" stroke="#10b981" />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
 
           {/* SIDEBAR */}
-          <div className="bg-purple-900/20 p-6 rounded-xl h-[500px] overflow-y-auto">
+          <div className="bg-purple-900/20 p-6 rounded-2xl h-[500px] overflow-y-auto">
             {todosClientes.map((c) => {
               const ativo = clienteSelecionado === c.nome;
-
               return (
                 <div
                   key={c.nome}
                   onClick={() => setClienteSelecionado(c.nome)}
-                  className={`p-3 mb-2 cursor-pointer rounded
-                    ${ativo ? 'bg-purple-600' : 'bg-purple-900/40'}
-                  `}
+                  className={`p-3 mb-2 rounded cursor-pointer ${ativo ? 'bg-purple-600' : 'bg-purple-900/40'}`}
                 >
                   <p>{c.nome}</p>
                   <p>{c.leads} leads</p>
