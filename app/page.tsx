@@ -31,8 +31,6 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-const META_CPL = 100; // ← altere para sua meta de CPL
-
 function ClienteSidebar({
   clientes,
   plataforma,
@@ -46,16 +44,10 @@ function ClienteSidebar({
 }) {
   const label = plataforma === 'google_ads' ? 'Google Ads' : 'Meta Ads';
 
-  // S.O.S primeiro, depois por CPL decrescente
-  const sorted = useMemo(() => [...clientes].sort((a, b) => {
-    const aSos = a.leads > 0 && a.cpl > META_CPL;
-    const bSos = b.leads > 0 && b.cpl > META_CPL;
-    if (aSos && !bSos) return -1;
-    if (!aSos && bSos) return 1;
-    return b.cpl - a.cpl;
-  }), [clientes]);
-
-  const sosCount = sorted.filter(c => c.leads > 0 && c.cpl > META_CPL).length;
+  // Ordenado por CPL decrescente
+  const sorted = useMemo(() =>
+    [...clientes].sort((a, b) => b.cpl - a.cpl),
+  [clientes]);
 
   return (
     <aside style={{
@@ -90,31 +82,16 @@ function ClienteSidebar({
         }}>
           Clientes {label}
         </span>
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          {sosCount > 0 && (
-            <span style={{
-              background: 'rgba(255,77,109,0.18)',
-              border: '1px solid rgba(255,77,109,0.4)',
-              borderRadius: '6px', padding: '2px 7px',
-              fontSize: '9px', fontWeight: 800, color: '#ff4d6d',
-              letterSpacing: '0.08em',
-              display: 'flex', alignItems: 'center', gap: '4px',
-            }}>
-              <span style={{ animation: 'sosPulse 1.2s ease-in-out infinite' }}>●</span>
-              {sosCount} S.O.S
-            </span>
-          )}
-          <span style={{
-            background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-            color: '#fff', fontSize: '10px', fontWeight: 700,
-            padding: '3px 9px', borderRadius: '99px',
-          }}>
-            {clientes.length}
-          </span>
-        </div>
+        <span style={{
+          background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+          color: '#fff', fontSize: '10px', fontWeight: 700,
+          padding: '3px 9px', borderRadius: '99px',
+        }}>
+          {clientes.length}
+        </span>
       </div>
 
-      {/* Lista completa — sem limite, sem botão "ver todos" */}
+      {/* Lista completa */}
       <div style={{
         overflowY: 'auto', flex: 1,
         padding: '10px 14px',
@@ -122,7 +99,6 @@ function ClienteSidebar({
         scrollbarWidth: 'thin', scrollbarColor: '#7c3aed transparent',
       }}>
         {sorted.map((c, i) => {
-          const isSos = c.leads > 0 && c.cpl > META_CPL;
           const ativo = clienteSelecionado === c.nome;
 
           return (
@@ -130,17 +106,13 @@ function ClienteSidebar({
               key={c.nome}
               onClick={() => onSelect(c.nome)}
               style={{
-                background: ativo
-                  ? 'rgba(124,58,237,0.35)'
-                  : isSos ? 'rgba(255,77,109,0.07)' : '#1a1535',
-                border: `1px solid ${
-                  ativo ? 'rgba(168,85,247,0.6)'
-                  : isSos ? 'rgba(255,77,109,0.28)' : 'rgba(120,80,255,0.16)'
-                }`,
+                background: ativo ? 'rgba(124,58,237,0.35)' : '#1a1535',
+                border: `1px solid ${ativo ? 'rgba(168,85,247,0.6)' : 'rgba(120,80,255,0.16)'}`,
                 borderRadius: '12px', padding: '11px 13px',
                 cursor: 'pointer', transition: 'border-color .15s, background .15s',
               }}
             >
+              {/* Nome */}
               <div style={{
                 fontSize: '10.5px', fontWeight: 700,
                 letterSpacing: '0.06em', textTransform: 'uppercase',
@@ -153,21 +125,13 @@ function ClienteSidebar({
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {c.nome}
                 </span>
-                {isSos && (
-                  <span style={{
-                    background: 'rgba(255,77,109,0.2)', border: '1px solid rgba(255,77,109,0.4)',
-                    borderRadius: '5px', padding: '1px 6px',
-                    fontSize: '8.5px', fontWeight: 800, color: '#ff4d6d', flexShrink: 0,
-                  }}>
-                    S.O.S
-                  </span>
-                )}
               </div>
 
+              {/* Métricas */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px' }}>
                   <span style={{ color: 'rgba(255,255,255,0.4)' }}>{c.leads} Conv.</span>
-                  <span style={{ fontWeight: 600, color: isSos ? '#ff4d6d' : '#00e5a0' }}>
+                  <span style={{ fontWeight: 600, color: '#00e5a0' }}>
                     CPL R$ {c.cpl.toFixed(2)}
                   </span>
                 </div>
@@ -182,10 +146,6 @@ function ClienteSidebar({
           );
         })}
       </div>
-
-      <style>{`
-        @keyframes sosPulse { 0%,100%{opacity:1} 50%{opacity:.25} }
-      `}</style>
     </aside>
   );
 }
@@ -309,35 +269,15 @@ export default function Dashboard() {
   if (!isMounted) return null;
 
   return (
-    /*
-      IMPORTANTE: para o background com logo aparecer, adicione no seu
-      globals.css ou layout.tsx:
-
-        body {
-          background-color: #0a051a;
-          background-image: url('/logo-empresa.png');
-          background-repeat: no-repeat;
-          background-position: center center;
-          background-size: 40%;
-          background-attachment: fixed;
-          opacity-blend: ...  (use o wrapper abaixo para opacidade)
-        }
-
-      OU use o wrapper com pseudo-elemento abaixo (recomendado):
-    */
     <main
       className="min-h-screen p-6 md:p-12 text-purple-50 font-sans"
-      style={{
-        backgroundColor: '#0a051a',
-        position: 'relative',
-      }}
+      style={{ backgroundColor: '#0a051a', position: 'relative' }}
     >
       {/* Background logo watermark */}
       <div
         aria-hidden="true"
         style={{
-          position: 'fixed',
-          inset: 0,
+          position: 'fixed', inset: 0,
           backgroundImage: "url('/logo-empresa.png')",
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center center',
@@ -354,7 +294,6 @@ export default function Dashboard() {
         <header className="flex flex-col gap-8 mb-12 border-b border-purple-900/40 pb-10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
-            {/* LOGO — aumentada */}
             <Image
               src="/logo-empresa.png"
               alt="Logo"
